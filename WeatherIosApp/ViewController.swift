@@ -78,14 +78,73 @@ class ViewController: UIViewController , CLLocationManagerDelegate{
         let location = locations[0]
         lat = location.coordinate.latitude
         lon = location.coordinate.longitude
-        
+        //debugPrint("lat = \(lat)   lon =   \(lon)")
         
         let url = "http://api.openweathermap.org/data/2.5/weather?lat=\(lat)&lon=\(lon)&appid=\(apiKey)"
-        AF.request(url).responseJSON { (responsJson) in
+        //debugPrint(url)
+        
+        AF.request(url, method: .get).validate().responseJSON { (response) in
+        // AF.request(url).validate().responseData { (response) in
+        //                AF.request(url).validate().responseString { (response) in
+//        AF.request(url, method: .get).response { (response) in
+            
+            switch(response.result){
+            case .success:
+                //debugPrint("Response : \(response.result)")
+                self.activityIndicator.stopAnimating()
+                
+                
+                let jsonRespStr = JSON(response.data as Any)
+                //debugPrint(jsonRespStr)
+                
+                
+                //let temp = jsonRespStr["main"]["temp"].stringValue
+                let temp = jsonRespStr["main"]["temp"].doubleValue
+                //debugPrint("temp = \(temp)")
+                
+                
+                let weather = jsonRespStr["weather"].array
+                let weatherMain = weather![0]["main"].stringValue
+                let iconTag = weather![0]["icon"].stringValue
+                //debugPrint(weatherMain)
+                //debugPrint(iconTag)
+                
+                
+                let locationName = jsonRespStr["name"].stringValue
+                //debugPrint(locationName)
+                
+               
+                self.labelCountry.text = locationName
+                self.labelTemp.text = "\(Int(round(temp)))"
+                self.imageCondition.image = UIImage(named: iconTag)
+                self.labelCondition.text = weatherMain
+                
+                let date = Date()
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateFormat = "EEEE"
+                self.labelDay.text = dateFormatter.string(from: date)
+                
+                
+                
+                if(iconTag.last == "n"){//Night
+                    self.setGrayGradientBackground()
+                    debugPrint("Evening")
+                    
+                }else{
+                    self.setBlueGradientBackground()
+                    debugPrint("Morning")
+                    
+                    
+                }
+                
+                
+                break
+            case .failure(let err):
+                debugPrint("err  = \(err)")
+                break
+            }
             
             
-            debugPrint("Response : \(responsJson)")
-            self.activityIndicator.stopAnimating()
             
             
         }
